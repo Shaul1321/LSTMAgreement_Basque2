@@ -2,7 +2,7 @@ import csv
 from collections import Counter
 import re
 
-"""this code is responsible for create the dataset csv file, based on all_outputs.txt
+"""this code is responsible for the creation the dataset csv file, based on all_outputs.txt
 (the output of the morphological analyser for all sentences) and the text file that contains
 all the training sentences."""
 

@@ -56,7 +56,7 @@ def read_words():
 	lemmas_counter = Counter()
 
 
-	with open("my_new_csv.csv", "r") as f:
+	with open("data.csv", "r") as f:
 		reader = csv.reader(f)
 
 		for row in reader:
@@ -90,7 +90,7 @@ def read_words2(): #reads from the morpho. analyser output
 	lemmas_counter = Counter()
 
 
-	with open("my_new_csv.csv", "r") as f:
+	with open("data.csv", "r") as f:
 		reader = csv.reader(f)
 
 		for row in reader:
