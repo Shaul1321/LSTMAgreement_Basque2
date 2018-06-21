@@ -1,11 +1,11 @@
 import csv
 import re
 
-voc_size = 100000
-ngrams_size = 75000
-lemmas_size = 20000
-suffixes_size = 100000
-prefixes_size = 100000
+voc_size = 100000 #100000
+ngrams_size = 100000 #75000
+lemmas_size = 30000 #20000
+suffixes_size = 100000 #100000
+prefixes_size = 100000 #10000
 
 def read_words(filename):
 	
@@ -129,14 +129,17 @@ W2I, I2W = generate_index_mapping(words, dict_size=voc_size)
 SUFFIX2I, I2SUFFIX = generate_index_mapping(suffixes, dict_size=suffixes_size)
 PREFIX2I, I2PREFIX = generate_index_mapping(prefixes, dict_size=prefixes_size)
 NGRAM2I, I2NGRAM = generate_index_mapping(ngrams, dict_size=ngrams_size)
-
-SENTENCES = create_dataset("data.csv")
-
+print "loaded voc and ngrams."
+#SENTENCES = create_dataset("raw_sentences_present_all_mostupdated_capital_NO_DUPLICATES2.csv")
+SENTENCES = create_dataset("dataset.csv")
+DEV_SENTENCES = create_dataset("treebank/train.csv")
+print "created dataset."
 analyser_outputs = read_tags_list()
 D2I, A2I, E2I, I2D, I2A, I2E = generate_label_index_mapping()
 
 OUTPUT2IND, IND2OUTPUT = generate_index_mapping(analyser_outputs, dict_size = len(analyser_outputs))
 lemmas = read_words("LEMMAS.txt")
+print "finished reading lemmas."
 LEMMA2I, I2LEMMA = generate_index_mapping(lemmas, dict_size = lemmas_size)
 
 
@@ -146,5 +149,5 @@ del lemmas
 del I2SUFFIX
 del I2PREFIX
 del I2NGRAM
-
+print "all finished."
 		

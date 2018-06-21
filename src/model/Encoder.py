@@ -2,7 +2,7 @@ import dynet as dy
 
 EMBEDDING_SIZE = 150
 
-"""This file contains various encoders than can encode a string word to a real vector"""
+"""the files contains various encoders than can encode a string word to a real vector"""
 
 class EmbeddingEncoder(object):
 
@@ -115,11 +115,12 @@ class SubwordEncoder(object):
 
 class CompleteSubwordEncoder(object):
 
-	def __init__(self, model, W2I, NGRAM2I, OUTPUT2IND, LEMMA2I):
+	def __init__(self, model, W2I, NGRAM2I, OUTPUT2IND, LEMMA2I, SUFFIX2I):
 
 		self.model = model
 		self.NGRAM2I = NGRAM2I
 		self.W2I = W2I
+		self.S2I =SUFFIX2I
 		self.OUTPUT2IND = OUTPUT2IND
 		self.LEMMA2I = LEMMA2I
 
@@ -127,6 +128,7 @@ class CompleteSubwordEncoder(object):
 		self.E_ngram = model.add_lookup_parameters((len(NGRAM2I), EMBEDDING_SIZE))
 		self.E_output = model.add_lookup_parameters((len(OUTPUT2IND), EMBEDDING_SIZE))
 		self.E_lemmas = model.add_lookup_parameters((len(LEMMA2I), EMBEDDING_SIZE))
+		self.E_suffixes = model.add_lookup_parameters((len(SUFFIX2I), EMBEDDING_SIZE))
 
 		self.W = model.add_parameters((EMBEDDING_SIZE, 4*EMBEDDING_SIZE))
 		self.b = model.add_parameters((EMBEDDING_SIZE, 1))
@@ -137,7 +139,7 @@ class CompleteSubwordEncoder(object):
 			ngrams+=["".join(seq) for seq in zip(*[w[i:] for i in range(j)])]
 		return ngrams
 
-	def encode(self, w, o, l, include_output = True, include_lemmas = True, sum_embeddings=True, noramlize=False):
+	def encode(self, w, o, l, include_output = False, include_lemmas = True, include_ngrams = True, sum_embeddings=True, noramlize=False):
 
 		# word embedding
 
@@ -147,13 +149,14 @@ class CompleteSubwordEncoder(object):
 		# ngrams embeddings
 		#ngrams = [ngram for ngram in ngrams if (ngram!=w or len(w)==1)]
 		ngrams = self._all_ngrams(w, 5)
-		ngrams_embedding = None
+		ngrams_embedding = dy.vecInput(EMBEDDING_SIZE)
 
 		for ngram in ngrams:
+
 			ngram_encoded = self.NGRAM2I[ngram] if ngram in self.NGRAM2I else self.NGRAM2I["<unk>"]
-			ngram_e = dy.lookup(self.E_ngram, ngram_encoded)
-			if ngrams_embedding is None: ngrams_embedding = ngram_e
-			else: ngrams_embedding = ngrams_embedding + ngram_e
+			ngram_e = dy.lookup(self.E_ngram, ngram_encoded)	
+			if include_ngrams:
+				 ngrams_embedding = ngrams_embedding + ngram_e
 		if noramlize: ngrams_embedding = ngrams_embedding/len(ngrams)
 
 		#outputs embeddings
@@ -176,11 +179,21 @@ class CompleteSubwordEncoder(object):
 
 		#exp_out/=len(o)
 
+		#suffix embedding
+		"""
+		suf1, suf2 = w[-1], w[-2:]
+		suf1_idx = self.S2I[suf1] if suf1 in self.S2I else self.S2I["<unk>"]			
+		suf1_e = dy.lookup(self.E_suffixes, suf1_idx)
+		suf2_idx = self.S2I[suf2] if suf2 in self.S2I else self.S2I["<unk>"]			
+		suf2_e = dy.lookup(self.E_suffixes, suf2_idx)
+		suf_e = suf2_e+suf1_e
+		"""
+
 		W = dy.parameter(self.W)
 		b = dy.parameter(self.b)
 		#return W*dy.concatenate([ngrams_embedding, output_embedding, w_embedding]) 
-		if sum_embeddings: result = ngrams_embedding+output_embedding+lemmas_embedding+w_embedding
-		else: result = W*dy.concatenate([ngrams_embedding, output_embedding,lemmas_embedding, w_embedding]) 
+		if sum_embeddings: result = ngrams_embedding+output_embedding+lemmas_embedding+w_embedding + b
+		else: result = W*dy.concatenate([ngrams_embedding, output_embedding,lemmas_embedding, w_embedding])  + b
 		#else: result = W*dy.concatenate([ngrams_embedding, output_embedding+lemmas_embedding+w_embedding]) 
 		return result
 

@@ -10,13 +10,23 @@ duplicate_counter = 0.
 ambiguous = set()
 labels = Counter()
 
+def count_verbs(output):
+	output_splitted = output.split("^")
+	count = 0
+
+	for o in output_splitted:
+		
+		if "<vbsint>" in o:
+			count += 1
+	return count
+
 def read_data(lower=False, remove_suffixes=False):
 
 	with open("all_outputs.txt", "r") as f:
 		outputs = f.readlines()
 	outputs = [line.strip() for line in outputs]
 
-	with open("all_sentences.txt", "r") as f:
+	with open("raw_sentneces.txt", "r") as f:
 		sentences = f.readlines() 
 
 	sentences = [line.strip() for line in sentences]
@@ -36,11 +46,16 @@ def read_data(lower=False, remove_suffixes=False):
 	return zip(sentences, outputs)
 
 
-def create_csv(fname, sents_and_outputs, condition, duplicate_handler, unambiguous = False, one_verb=False):
+#def remove_suffixes (
+
+def create_csv(fname, sents_and_outputs, condition, duplicate_handler, unambiguous = False, one_verb=False, filter_lexical=False, filter_no_ek=False):
 
 	errors = 0.
 	verbs_count = 0.
-	
+	cases_count = 0.
+	both = Counter()
+	contains_ek = 0.
+
 	with open(fname, 'wb') as f:
 		
 		wr = csv.writer(f, quoting=csv.QUOTE_ALL)
@@ -50,17 +65,52 @@ def create_csv(fname, sents_and_outputs, condition, duplicate_handler, unambiguo
 		print len(sents_and_outputs)
 		sents_and_outputs = filter(lambda (sent,out): "NONE" not in out, sents_and_outputs)
 		print len(sents_and_outputs)
+		
+		if filter_no_ek:
+
+			sents_and_outputs = filter(lambda (sent,out): "ek " in sent, sents_and_outputs)
+			#print "number of sentences with ek: ", len(sents_and_outputs)
+			for i in range(100):
+				print sents_and_outputs[i][0]
+				print
+
+		if filter_lexical:
+			sents_and_outputs = filter(lambda (sent,out): "<vblex>" not in out, sents_and_outputs)
+			print len(sents_and_outputs)
 			
 
+		if one_verb:
+			sents_and_outputs = filter(lambda (sent,out): count_verbs(out) == 1, sents_and_outputs)
+		"""
+		without_cases = filter(lambda (sent,out): "ak " not in sent and "ek " not in sent and "a " not in sent, sents_and_outputs)
+		without_ekak = filter(lambda (sent,out): "ak " not in sent and "ek " not in sent, sents_and_outputs)
+		print "number of sentences without case marks: {}; percentage: {}".format(len(without_cases), (1.*len(without_cases)/len(sents_and_outputs)))
+		c=0.
+		for (s,o) in sents_and_outputs:
+		 #if o.count("<vbsint>")==1:
+		
+			sp = s.split(" ")
+			op = o.split("^")
+			if (sp[-2].endswith("ak") or sp[-2].endswith("ek") or sp[-2].endswith("a")) and ("<n>" in op[-2] or "<det>" in op[-2]):
+			
+				c+=1
+				print s
+				print op[-2]
+				print "------------------"
+				#print s.index("ek ")
+
+		print c/len(sents_and_outputs)
+		"""
 		if unambiguous:
 			sents_and_outputs = filter(lambda (sent,out): "ak " not in sent, sents_and_outputs)
 		print len(sents_and_outputs)
 
-		if one_verb:
-			sents_and_outputs = filter(lambda (sent,out): out.count("<vbsint>")==1, sents_and_outputs)
+
 		print len(sents_and_outputs)
 
 		for ind, (sentence, output) in enumerate(sents_and_outputs):
+
+
 
 			#if ind%1000 == 0: print "{}/{}".format(ind, len(sents_and_outputs))
 
@@ -68,42 +118,66 @@ def create_csv(fname, sents_and_outputs, condition, duplicate_handler, unambiguo
 			output_splitted = [o.split("$")[0] for o in output_splitted]
 			sentence_splitted = sentence.split(" ")
 
+
+
+			if "ek " in sentence: contains_ek+=1
+			if "ek " in sentence and "ak " in sentence:
+				ak_ind, ek_ind = -1, -1
+				for jj, w in enumerate(sentence_splitted):
+					if w.endswith("ek") and ek_ind==-1:
+						ek_ind = jj
+					elif w.endswith("ak") and ak_ind == -1:
+						ak_ind = jj
+
+				both[ak_ind-ek_ind]+=1
+
+
+
+
+
 			verbs_count += output.count("<vbsint>")
 
 			for i, w_output in enumerate(output_splitted): 
 
-				if "<vbsint>" in w_output and condition(w_output):
-
+				if "<vbsint>" in w_output:
+					#if len(sentence)<70 and sentence.count("ak ")>=2: print sentence
 					ls = [sentence, output] #, str(i), w_output]
 					word = w_output.split("/")[0]
-					oooo = duplicate_handler(w_output)
+					output_pruned = duplicate_handler(w_output)
+					if not condition(output_pruned): break
+
 					try:
-						#index = sentence_splitted.index(word)
+
 						index = i
 						#assert sentence_splitted[index]==word
-						ls+=[str(index), duplicate_handler(w_output)]
+						ls+=[str(index), output_pruned]			
 						wr.writerow(ls)
 						
 						global labels #collect label statistics
 						word_analysis =  re.findall("<.*?>", ls[-1])
-						labels.update(word_analysis)	
+						labels.update(word_analysis)
+	
 
 					except Exception as e:
 						print sentence_splitted
 						print "--------------"
 						print [o.split("/")[0] for o in output_splitted]
-						print oooo
+						print zeuden
 						print e
 						print "==============================="
 						errors+=1
 					
 					break
 	l = len(sents_and_outputs)
+	print both
+	print contains_ek/(1.*l)
+	print sum(both.values())
+	print sum(both.values())/(1.*l)
 	print "number of sentences: {}".format(l)
 	print "average number of verbs per sentence: {}".format(verbs_count/l)
 	print "error rate: {}".format(errors/l)
 	print "duplicate rate: {}".format(duplicate_counter/l)
-	print "there are {} ambiguous verbs: {}".format(len(ambiguous), ambiguous)
+	#print "there are {} ambiguous verbs: {}".format(len(ambiguous), ambiguous)
 
 
 
@@ -154,7 +228,7 @@ if __name__ == '__main__':
 	present_verbs = lambda out: "<pri>" in out
  	past_verbs  = lambda out: "<pii>" in out or "<pp>" in out
 
-	create_csv("data.csv", sents_and_outputs, condition=present_verbs, duplicate_handler=duplicate_handler)
+	create_csv("dataset.csv", sents_and_outputs, condition=all_verbs, duplicate_handler=duplicate_handler)
 	print labels
 
 

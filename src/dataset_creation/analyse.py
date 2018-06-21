@@ -1,7 +1,7 @@
 import subprocess
 import csv
 
-with open("all_sentences.txt", "r") as f:
+with open("all_sentences_raw.txt", "r") as f:
     lines = f.readlines()
 
 lines = [line.strip() for line in lines]
@@ -9,7 +9,7 @@ lines = [line.strip() for line in lines]
 i=0
 with open("all_outputs.txt", 'w') as all_outputs:
 
-      wr = csv.writer(f, quoting=csv.QUOTE_ALL)
+      #wr = csv.writer(f, quoting=csv.QUOTE_ALL)
 
       for ind, sentence in enumerate(lines):
 

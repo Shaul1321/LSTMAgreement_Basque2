@@ -8,7 +8,8 @@ with open('all.json') as f:
 
 l = len(data)
 
-f = open("all_sentences.txt", "w")
+data = data[:int(0.99*l)]
+f = open("all_sentences_raw.txt", "w")
 s = ""
 chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789?.,:-()[] \n"
 strings = []

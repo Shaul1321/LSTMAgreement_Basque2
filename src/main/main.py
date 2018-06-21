@@ -1,16 +1,22 @@
-import dynet as dy
-from utils import *
-print "done importing util."
+part1 = False
 
-from p11_generator import *
+import dynet as dy
+from utils2 import *
 #from RNN import *
-from RNN_task1 import *
-print "done importing rnn."
+if part1: 
+	from RNN_attention7 import * 
+	from p1_generator2 import *
+else: 
+	from RNN_attention8 import *
+	from p3_generator import *
+from embedding_collector import *
+from states_collector import *
 import matplotlib.pyplot as plt
 import numpy as np
-print "done importing numpy etc."
 import Encoder
-print "done importing encoder."
+
+dyparams = dy.DynetParams()
+dyparams.set_autobatch(True)
 
 def plot(model):
 
@@ -38,8 +44,14 @@ def plot(model):
 
 
 if __name__ == '__main__':
-
-	dg = P1Generator(SENTENCES, W2I, I2W, D2I, A2I, E2I)
+	
+	if not part1: 
+		dg = P3Generator(SENTENCES, W2I, I2W, D2I, A2I, E2I, prepared_dev = DEV_SENTENCES)
+		embedding_filename = "EMBEDDINGS.txt" 
+	else:
+		dg = P1Generator(SENTENCES, W2I, I2W, D2I, A2I, E2I, prepared_dev = DEV_SENTENCES)
+		embedding_filename = "EMBEDDINGS1.TXT"
+		
 	in_size, a_out_size, d_out_size, e_out_size = len(W2I), len(A2I), len(D2I), len(E2I)
 	model = dy.Model()
 
@@ -47,9 +59,14 @@ if __name__ == '__main__':
 	#encoder = LSTMEncoder(len(C2I), model, C2I)
 	#encoder = EmbeddingEncoder(in_size, model, W2I)
 	#encoder = Encoder.SubwordEncoder(in_size, model, W2I, SUFFIX2I, PREFIX2I, OUTPUT2IND)
-	encoder = Encoder.CompleteSubwordEncoder(model, W2I, NGRAM2I, OUTPUT2IND, LEMMA2I)
-
-	rnn = RNN(in_size, 64, (a_out_size, e_out_size, d_out_size), dg,  I2A, I2E, I2D, I2W, model, encoder)
+	encoder = Encoder.CompleteSubwordEncoder(model, W2I, NGRAM2I, OUTPUT2IND, LEMMA2I, SUFFIX2I)
+	embedding_collector = Collector(encoder, "VOC_WITH_LEMMAS.txt", embedding_filename)
+	states_collector = StatesCollector("preds2.txt")
+	if not part1: 
+		rnn = RNN(in_size, 64, (a_out_size, e_out_size, d_out_size), dg,  I2A, I2E, I2D, I2W, model, encoder, embedding_collector, states_collector)
+	else:
+		rnn = RNN(in_size, 64, (a_out_size, e_out_size, d_out_size), dg,  I2A, I2E, I2D, I2W, model, encoder, embedding_collector)
+	
 	#rnn = RNN(in_size, 64, 2, dg,  I2A, I2E, I2D, I2W, model, encoder)
 
 	rnn.train()
