@@ -18,68 +18,6 @@ DROPOUT_RATE = 0.0
 I2SUFFIX = {0: "ak", 1: "ek", 2: "a", 3: "", 4: "ei", 5: "ari"}
 SUFFIX2I = {"ak": 0, "ek": 1, "a":2, "": 3, "ei": 4, "ari": 5}
 
-def write_errors(good, bad, good_abs, bad_abs, good_erg, bad_erg, bad_erg2, bad_abs2,error_count, total):
- 
- f = open("error_rates7_count.txt", "w")
- items = sorted(error_count.items(), key = lambda (key, val): -val)
- for (key, val) in items:
-	f.write(str(key).replace(" ", "")+"\t"+str(val)+"\n")
- f.close()
- 
-
- f = open("error_rates6.txt", "w")
- items = sorted(total.items(), key = lambda (key, val): -val)
- for (key, val) in items:
-	good_count = good[key] 
-	bad_count =  bad[key]
-	f.write(str(key).replace(" ", "")+"\t"+str(good_count)+"\t"+str(bad_count)+"\n")
- f.close()
-
- f = open("error_rates_abs6.txt", "w")
- keys = list(set(good_abs.keys() + bad_abs.keys()))
- keys = sorted(keys, key = lambda k: -(good_abs[k]+bad_abs[k]))
- for k in keys:
-	good_count = good_abs[k] 
-	bad_count =  bad_abs[k] 
-	f.write(str(k).replace(" ", "")+"\t"+str(good_count)+"\t"+str(bad_count)+"\n")
-
- f.close()
-
-
- f = open("error_rates_erg6.txt", "w")
- keys = list(set(good_erg.keys() + bad_erg.keys()))
- keys = sorted(keys, key = lambda k: -(good_erg[k]+bad_erg[k]))
- for k in keys:
-	good_count = good_erg[k] 
-	bad_count =  bad_erg[k] 
-	f.write(str(k).replace(" ", "")+"\t"+str(good_count)+"\t"+str(bad_count)+"\n")
-
- f.close()
-
-
- f = open("error_rates_abs6.2.txt", "w")
- keys = list(set(good_abs.keys() + bad_abs2.keys()))
- keys = sorted(keys, key = lambda k: -(good_abs[k]+bad_abs2[k]))
- for k in keys:
-	good_count = good_abs[k] 
-	bad_count =  bad_abs2[k] 
-	f.write(str(k).replace(" ", "")+"\t"+str(good_count)+"\t"+str(bad_count)+"\n")
-
- f.close()
-
-
- f = open("error_rates_erg6.2.txt", "w")
- keys = list(set(good_erg.keys() + bad_erg2.keys()))
- keys = sorted(keys, key = lambda k: -(good_erg[k]+bad_erg2[k]))
- for k in keys:
-	good_count = good_erg[k] 
-	bad_count =  bad_erg2[k] 
-	f.write(str(k).replace(" ", "")+"\t"+str(good_count)+"\t"+str(bad_count)+"\n")
-
- f.close()
-
-
-
 class RNN(object):
 
 	def __init__(self, in_size, hid_size, (a_out, e_out, d_out), dataGenerator, I2A, I2E, I2D, I2W, model, encoder, embedding_collector, states_collector):
