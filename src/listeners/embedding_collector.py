@@ -7,7 +7,10 @@ class Collector(object):
 		self.embedding_filename = embedding_filename
 		
 	def collect(self, size = 15000):
-	
+		"""
+		collect learned embedding vectors and record them to a file.
+		"""
+		
 		print "collecting embedding..."
 		
 		with open(self.voc_file, "r") as f:
