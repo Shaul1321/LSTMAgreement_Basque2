@@ -45,7 +45,10 @@ class P3Generator(DataGenerator):
 
  def create_example(self, data_sample, prev_data, next_data, shuffle=False):
  
-
+	"""
+	creates an instance of the the suffix prediction task: a sentence with all suffixes omitted, alongside the gold suffixes.
+	"""
+	
 	verb_index = int(data_sample['verb_index'])
 
 	sent, analyser_output, lemmas = self._get_analyser_output(data_sample['output'])
