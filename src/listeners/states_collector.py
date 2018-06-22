@@ -21,7 +21,9 @@ class StatesCollector(object):
 			
 		
 	def collect(self, data_sample, sent_seen, gold, pred, states, max_size = 10000):
-		
+		"""
+		collect bilstm states over words and record them in a file.
+		"""
 		if len(self.states_record) > max_size: return
 		
 		sent_str = " ".join(sent_seen)
